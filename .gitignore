@@ -1,0 +1,8 @@
+/vendor
+/node_modules
+.env
+.DS_Store
+/public/storage
+/storage/*.key
+*.log
+*.sqlite
