@@ -1,61 +1,43 @@
-<!DOCTYPE html>
-<html lang="es" ng-app="FortunaApp">
-<head>
-    <meta charset="UTF-8">
-    <title>Galleta de la Fortuna</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
-    <style>
-        body {
-            font-family: sans-serif;
-            text-align: center;
-            margin-top: 100px;
-        }
-        button {
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #f6c90e;
-            border: none;
-            cursor: pointer;
-            border-radius: 8px;
-            margin: 10px;
-        }
-        #mensaje {
-            margin-top: 40px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-    </style>
-</head>
-<body ng-controller="FortunaController">
+{{-- resources/views/galleta.blade.php --}}
+@extends('layouts.app')
 
-    <h1>Bienvenido a la Galleta de la Fortuna</h1>
+@section('title', 'Galleta de la Fortuna')
 
-    <button ng-click="abrirGalleta()">ABRE TU GALLETA</button>
+@section('content')
+    <div ng-controller="FortunaController">
+        <h1>Galleta de la Fortuna</h1>
+        <p>Haz clic para descubrir tu suerte de hoy.</p>
 
-    <div id="mensaje" ng-if="mensaje">
-        @{{ mensaje }}
+        <button class="btn" ng-click="abrirGalleta()">ABRE TU GALLETA</button>
+
+        <div id="mensaje" ng-if="mensaje">
+            @{{ mensaje }}
+        </div>
+
+        <button class="btn btn-logout" ng-click="logout()">Cerrar sesión</button>
     </div>
+@endsection
 
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button type="submit">Cerrar sesión</button>
-    </form>
-
+@section('scripts')
     <script>
-        angular.module('FortunaApp', [])
-            .controller('FortunaController', function($scope, $http) {
-                $scope.mensaje = '';
+        app.controller('FortunaController', function($scope, $http) {
+            $scope.mensaje = 'Presiona el botón para ver tu fortuna.';
 
-                $scope.abrirGalleta = function() {
-                    $http.get('/api/fortuna')
-                        .then(function(response) {
-                            $scope.mensaje = response.data.mensaje;
-                        }, function(error) {
-                            alert("Error al obtener el mensaje.");
-                        });
-                };
-            });
+            $scope.abrirGalleta = function() {
+                $scope.mensaje = 'Buscando tu fortuna...';
+                $http.get('/api/fortuna')
+                    .then(function(response) {
+                        $scope.mensaje = response.data.mensaje;
+                    }, function(error) {
+                        $scope.mensaje = "No se pudo obtener el mensaje. Inténtalo de nuevo.";
+                    });
+            };
+
+            $scope.logout = function() {
+                $http.post('/logout').then(function() {
+                    window.location.href = '/login';
+                });
+            };
+        });
     </script>
-</body>
-</html>
+@endsection

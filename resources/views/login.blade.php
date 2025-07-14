@@ -1,23 +1,46 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-</head>
-<body>
-    <h2>Iniciar sesión</h2>
+{{-- resources/views/login.blade.php --}}
+@extends('layouts.app')
 
-    @if ($errors->any())
-        <p style="color:red">{{ $errors->first() }}</p>
-    @endif
+@section('title', 'Iniciar Sesión')
 
-    <form method="POST" action="/login">
-        @csrf
-        <label>Email: <input type="email" name="email" required></label><br><br>
-        <label>Contraseña: <input type="password" name="password" required></label><br><br>
-        <button type="submit">Entrar</button>
-    </form>
+@section('content')
+    <div ng-controller="LoginController">
+        <h2>Iniciar sesión</h2>
 
-    <p>¿No tienes cuenta? <a href="/register">Crear cuenta</a></p>
-</body>
-</html>
+        <form ng-submit="login()">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input id="email" type="email" ng-model="formData.email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input id="password" type="password" ng-model="formData.password" required>
+            </div>
+
+            <button type="submit" class="btn">Entrar</button>
+
+            <p class="error-message" ng-if="error">@{{ error }}</p>
+        </form>
+
+        <a href="/register" class="link">¿No tienes cuenta? Crear cuenta</a>
+    </div>
+@endsection
+
+@section('scripts')
+    <script>
+        app.controller('LoginController', function($scope, $http) {
+            $scope.formData = {};
+            $scope.error = '';
+
+            $scope.login = function() {
+                $scope.error = '';
+                $http.post('/login', $scope.formData)
+                    .then(function(response) {
+                        window.location.href = '/galleta';
+                    }, function(error) {
+                        $scope.error = error.data.errors.email[0] || "Credenciales incorrectas.";
+                    });
+            };
+        });
+    </script>
+@endsection

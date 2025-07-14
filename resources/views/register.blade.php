@@ -1,25 +1,58 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Registro</title>
-</head>
-<body>
-    <h2>Crear cuenta</h2>
+{{-- resources/views/register.blade.php --}}
+@extends('layouts.app')
 
-    @if ($errors->any())
-        <p style="color:red">{{ $errors->first() }}</p>
-    @endif
+@section('title', 'Registro')
 
-    <form method="POST" action="/register">
-        @csrf
-        <label>Nombre: <input type="text" name="name" required></label><br><br>
-        <label>Email: <input type="email" name="email" required></label><br><br>
-        <label>Contraseña: <input type="password" name="password" required></label><br><br>
-        <label>Repetir contraseña: <input type="password" name="password_confirmation" required></label><br><br>
-        <button type="submit">Registrarme</button>
-    </form>
+@section('content')
+    <div ng-controller="RegisterController">
+        <h2>Crear cuenta</h2>
 
-    <p>¿Ya tienes cuenta? <a href="/login">Inicia sesión</a></p>
-</body>
-</html>
+        <form ng-submit="register()">
+            <div class="form-group">
+                <label for="name">Nombre:</label>
+                <input id="name" type="text" ng-model="formData.name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input id="email" type="email" ng-model="formData.email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input id="password" type="password" ng-model="formData.password" required>
+            </div>
+            <div class="form-group">
+                <label for="password_confirmation">Repetir contraseña:</label>
+                <input id="password_confirmation" type="password" ng-model="formData.password_confirmation" required>
+            </div>
+
+            <button type="submit" class="btn">Registrarme</button>
+
+            <p class="error-message" ng-if="error">@{{ error }}</p>
+        </form>
+
+        <a href="/login" class="link">¿Ya tienes cuenta? Inicia sesión</a>
+    </div>
+@endsection
+
+@section('scripts')
+    <script>
+        app.controller('RegisterController', function($scope, $http) {
+            $scope.formData = {};
+            $scope.error = '';
+
+            $scope.register = function() {
+                $scope.error = '';
+                $http.post('/register', $scope.formData)
+                    .then(function(response) {
+                        window.location.href = '/galleta';
+                    }, function(error) {
+                        if (error.data.errors) {
+                            $scope.error = Object.values(error.data.errors)[0][0];
+                        } else {
+                            $scope.error = error.data.message || "Ocurrió un error. Inténtalo de nuevo.";
+                        }
+                    });
+            };
+        });
+    </script>
+@endsection

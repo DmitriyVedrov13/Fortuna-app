@@ -1,93 +1,69 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EntradaController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
     Route::post('/logout', [AuthController::class, 'logout']);
-});
 
-Route::get('/user', [AuthController::class, 'user'])->middleware('auth');
+    Route::put('/user', function (Request $request) {
+        $user = $request->user();
 
-Route::middleware('auth')->get('/user', function (Request $request) {
-    return response()->json($request->user());
-});
+        $data = $request->validate([
+            'name'  => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
+        ]);
 
-Route::middleware('auth')->put('/user', function (Request $request) {
-    $user = $request->user();
+        $user->update($data);
 
-    $data = $request->validate([
-        'name'  => 'sometimes|string|max:255',
-        'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
-    ]);
-
-    $user->update($data);
-
-    return response()->json([
-        'message' => 'Datos de usuario actualizados',
-        'user' => $user,
-    ]);
-});
-
-Route::middleware('auth')->put('/user/password', function (Request $request) {
-    $request->validate([
-        'current_password' => 'required|string',
-        'new_password'     => 'required|string|min:6|confirmed',
-    ]);
-
-    $user = $request->user();
-
-    if (!Hash::check($request->current_password, $user->password)) {
         return response()->json([
-            'message' => 'La contraseña actual es incorrecta',
-        ], 422);
-    }
+            'message' => 'Datos de usuario actualizados',
+            'user' => $user,
+        ]);
+    });
 
-    $user->update([
-        'password' => Hash::make($request->new_password),
-    ]);
+    Route::put('/user/password', function (Request $request) {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password'     => 'required|string|min:6|confirmed',
+        ]);
 
-    return response()->json([
-        'message' => 'Contraseña actualizada con éxito',
-    ]);
-});
+        $user = $request->user();
 
-Route::middleware('auth')->delete('/user', function (Request $request) {
-    $user = $request->user();
-    $user->delete();
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'La contraseña actual es incorrecta',
+            ], 422);
+        }
 
-    return response()->json([
-        'message' => 'Usuario eliminado'
-    ]);
-});
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
 
-Route::middleware('auth')->group(function () {
+        return response()->json([
+            'message' => 'Contraseña actualizada con éxito',
+        ]);
+    });
+
+    Route::delete('/user', function (Request $request) {
+        $user = $request->user();
+        $user->delete();
+
+        return response()->json([
+            'message' => 'Usuario eliminado'
+        ]);
+    });
+
     Route::apiResource('entradas', EntradaController::class);
-});
-
-Route::get('/fortuna', function () {
-    $mensajes = [
-        "Hoy es un buen día para empezar algo nuevo.",
-        "La paciencia es la llave del éxito.",
-        "Recibirás una buena noticia muy pronto.",
-        "Confía en ti mismo, los demás lo harán también.",
-        "Cada día trae nuevas oportunidades.",
-        "Tu esfuerzo pronto será recompensado.",
-        "No tengas miedo de soñar en grande.",
-        "Lo que das al mundo, vuelve a ti.",
-        "Tu sonrisa cambiará el día de alguien.",
-        "La suerte favorece a los valientes."
-    ];
-
-    $mensajeAleatorio = $mensajes[array_rand($mensajes)];
-
-    return response()->json([
-        'mensaje' => $mensajeAleatorio
-    ]);
 });

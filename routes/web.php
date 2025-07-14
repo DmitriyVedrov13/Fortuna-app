@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\FortunaController;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\Admin\FortunePhraseController;
+
 
 Route::get('/register', function () {
     return view('register');
@@ -28,11 +30,6 @@ Route::post('/register', function (Request $request) {
     return redirect('/galleta');
 });
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/galleta', [FortunaController::class, 'vista'])->name('galleta');
-    Route::get('/api/fortuna', [FortunaController::class, 'api']);
-});
-
 Route::get('/login', function () {
     return view('login');
 })->name('login');
@@ -42,6 +39,7 @@ Route::post('/login', function (Request $request) {
 
     if (Auth::attempt($credentials)) {
         $request->session()->regenerate();
+        // >> REGLA: Después del login, redirigir a /galleta
         return redirect()->intended('/galleta');
     }
 
@@ -56,3 +54,33 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
     return redirect('/login');
 })->name('logout');
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/galleta', [FortunaController::class, 'vista'])->name('galleta');
+    Route::get('/api/fortuna', [FortunaController::class, 'api']);
+});
+
+Route::get('/', function () {
+    return redirect(route('galleta'));
+});
+
+
+//Route::middleware(['auth'])->group(function () {
+//    Route::get('/admin/frases', [FortunePhraseController::class, 'index']);
+//    Route::post('/admin/frases', [FortunePhraseController::class, 'store'])->name('admin.frases.store');
+//});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/frases', [FortunePhraseController::class, 'index'])->name('admin.frases.index');
+    Route::post('/admin/frases', [FortunePhraseController::class, 'store'])->name('admin.frases.store');
+    Route::delete('/admin/frases/{id}', [FortunePhraseController::class, 'destroy'])->name('admin.frases.destroy');
+});
+
+//Route::middleware(['auth', 'is_admin'])->group(function () {
+//    //dd('Middleware is_admin работает!');
+//    Route::get('/admin/frases', [FortunePhraseController::class, 'index'])->name('admin.frases.index');
+//    Route::post('/admin/frases', [FortunePhraseController::class, 'store'])->name('admin.frases.store');
+//    Route::delete('/admin/frases/{id}', [FortunePhraseController::class, 'destroy'])->name('admin.frases.destroy');
+//});
+
